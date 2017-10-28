@@ -25,6 +25,9 @@ var ContributionType = graphql.NewObject(
 			"id": &graphql.Field{
 				Type: graphql.Int,
 			},
+			"userId": &graphql.Field{
+				Type: graphql.Int,
+			},
 			"title": &graphql.Field{
 				Type: graphql.String,
 			},

@@ -59,9 +59,9 @@ var queryType = graphql.NewObject(
 					},
 				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					idQuery, _ := p.Args["id"].(int)
+					id, _ := p.Args["id"].(int)
 					u := types.UserMaster{}
-					err := DB.Get(&u, "SELECT id,name,email,password,profile_image_id FROM user_masters WHERE id=?", idQuery)
+					err := DB.Get(&u, "SELECT id,name,email,password,profile_image_id FROM user_masters WHERE id=?", id)
 					if err != nil {
 						return nil, nil
 					}
@@ -72,9 +72,15 @@ var queryType = graphql.NewObject(
 			"userList": &graphql.Field{
 				Type:        graphql.NewList(types.UserType),
 				Description: "userList",
+				Args: graphql.FieldConfigArgument{
+					"first": &graphql.ArgumentConfig{
+						Type: graphql.Int,
+					},
+				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					first, _ := p.Args["first"].(int)
 					u := []types.UserMaster{}
-					err := DB.Select(&u, "SELECT id,name,email,password,profile_image_id FROM user_masters ORDER BY id ASC")
+					err := DB.Select(&u, "SELECT id,name,email,password,profile_image_id FROM user_masters ORDER BY id ASC LIMIT ?", first)
 					if err != nil {
 						return nil, nil
 					}
@@ -93,12 +99,70 @@ var queryType = graphql.NewObject(
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					idQuery, _ := p.Args["id"].(int)
 					u := types.UserContribution{}
-					err := DB.Get(&u, "SELECT id,title,view_status,created_at FROM user_contributions WHERE id=?", idQuery)
+					err := DB.Get(&u, "SELECT id,title,view_status FROM user_contributions WHERE id=?", idQuery)
 					if err != nil {
 						return nil, nil
 					}
 
 					return u, nil
+				},
+			},
+			"contributionList": &graphql.Field{
+				Type:        graphql.NewList(types.ContributionType),
+				Description: "find contribution list",
+				Args: graphql.FieldConfigArgument{
+					"first": &graphql.ArgumentConfig{
+						Type: graphql.Int,
+					},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					first, _ := p.Args["first"].(int)
+					u := []types.UserContribution{}
+					err := DB.Select(&u, "SELECT id,title,view_status FROM user_contributions ORDER BY id ASC LIMIT ?", first)
+					if err != nil {
+						return nil, nil
+					}
+
+					return u, nil
+				},
+			},
+			"problemList": &graphql.Field{
+				Type:        graphql.NewList(types.LogProblemContributionReportType),
+				Description: "find proble list",
+				Args: graphql.FieldConfigArgument{
+					"first": &graphql.ArgumentConfig{
+						Type: graphql.Int,
+					},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					first, _ := p.Args["first"].(int)
+					r := []types.LogProblemContributionReport{}
+					err := DB.Select(&r, "SELECT id,user_contribution_id,user_id,type FROM log_problem_contribution_reports ORDER BY id ASC LIMIT ?", first)
+					if err != nil {
+						return nil, nil
+					}
+
+					return r, nil
+				},
+			},
+
+			"questionList": &graphql.Field{
+				Type:        graphql.NewList(types.LogQuestionType),
+				Description: "find question list",
+				Args: graphql.FieldConfigArgument{
+					"first": &graphql.ArgumentConfig{
+						Type: graphql.Int,
+					},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					first, _ := p.Args["first"].(int)
+					r := []types.LogQuestion{}
+					err := DB.Select(&r, "SELECT id,user_id,email,body FROM log_questions ORDER BY id ASC LIMIT ?", first)
+					if err != nil {
+						return nil, nil
+					}
+
+					return r, nil
 				},
 			},
 		},
@@ -131,8 +195,11 @@ func main() {
 
 	fmt.Println("Now server is running on port 8080")
 	fmt.Println("Test with Get      : curl -g 'http://localhost:8080/graphql?query={user(id:1){name}}'")
-	fmt.Println("Test with Get      : curl -g 'http://localhost:8080/graphql?query={userList{id,name}}'")
+	fmt.Println("Test with Get      : curl -g 'http://localhost:8080/graphql?query={userList(first:100){id,name}}'")
 	fmt.Println("Test with Get      : curl -g 'http://localhost:8080/graphql?query={contribution(id:1){id,title}}'")
+	fmt.Println("Test with Get      : curl -g 'http://localhost:8080/graphql?query={contributionList(first:100){id,title}}'")
+	fmt.Println("Test with Get      : curl -g 'http://localhost:8080/graphql?query={problemList(first:100){id}}'")
+
 	http.ListenAndServe(":8080", nil)
 }
 

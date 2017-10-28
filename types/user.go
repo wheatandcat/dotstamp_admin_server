@@ -29,6 +29,12 @@ var UserType = graphql.NewObject(
 			"name": &graphql.Field{
 				Type: graphql.String,
 			},
+			"email": &graphql.Field{
+				Type: graphql.String,
+			},
+			"profileImageId": &graphql.Field{
+				Type: graphql.Int,
+			},
 		},
 	},
 )

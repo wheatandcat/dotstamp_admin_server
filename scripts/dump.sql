@@ -94,6 +94,13 @@ INSERT INTO `user_forget_passwords` VALUES (2,"dotstamplocaltest@gmail.com","XVl
 
 INSERT INTO `user_contribution_sound_lengths` VALUES (1,1,15,30,'2015-01-01 10:00:00','2015-01-01 10:00:00',NULL);
 
+INSERT INTO `log_problem_contribution_reports` VALUES (1,1,1,1,'2015-01-01 10:00:00','2015-01-01 10:00:00',NULL);
+INSERT INTO `log_problem_contribution_reports` VALUES (2,1,2,1,'2015-01-01 10:00:00','2015-01-01 10:00:00',NULL);
+INSERT INTO `log_problem_contribution_reports` VALUES (3,2,1,2,'2015-01-01 10:00:00','2015-01-01 10:00:00',NULL);
+
+
+INSERT INTO `log_questions` VALUES (1,1,'foo@com','foo','2015-01-01 10:00:00','2015-01-01 10:00:00',NULL);
+
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
