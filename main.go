@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -11,6 +9,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/graphql-go/graphql"
+	"github.com/graphql-go/handler"
 	"github.com/jmoiron/sqlx"
 	"github.com/wheatandcat/dotstamp_admin_server/types"
 )
@@ -55,7 +54,8 @@ var queryType = graphql.NewObject(
 				Description: "find user",
 				Args: graphql.FieldConfigArgument{
 					"id": &graphql.ArgumentConfig{
-						Type: graphql.Int,
+						Type:        graphql.Int,
+						Description: "user id",
 					},
 				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -71,10 +71,11 @@ var queryType = graphql.NewObject(
 			},
 			"userList": &graphql.Field{
 				Type:        graphql.NewList(types.UserType),
-				Description: "userList",
+				Description: "user list",
 				Args: graphql.FieldConfigArgument{
 					"first": &graphql.ArgumentConfig{
-						Type: graphql.Int,
+						Type:        graphql.Int,
+						Description: "number of item displayed",
 					},
 				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -93,7 +94,8 @@ var queryType = graphql.NewObject(
 				Description: "find contribution",
 				Args: graphql.FieldConfigArgument{
 					"id": &graphql.ArgumentConfig{
-						Type: graphql.Int,
+						Type:        graphql.Int,
+						Description: "contribution id",
 					},
 				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -109,16 +111,17 @@ var queryType = graphql.NewObject(
 			},
 			"contributionList": &graphql.Field{
 				Type:        graphql.NewList(types.ContributionType),
-				Description: "find contribution list",
+				Description: "contribution list",
 				Args: graphql.FieldConfigArgument{
 					"first": &graphql.ArgumentConfig{
-						Type: graphql.Int,
+						Type:        graphql.Int,
+						Description: "number of item displayed",
 					},
 				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					first, _ := p.Args["first"].(int)
 					u := []types.UserContribution{}
-					err := DB.Select(&u, "SELECT id,title,view_status FROM user_contributions ORDER BY id ASC LIMIT ?", first)
+					err := DB.Select(&u, "SELECT id,user_id,title,view_status,created_at,updated_at,deleted_at FROM user_contributions ORDER BY id ASC LIMIT ?", first)
 					if err != nil {
 						return nil, nil
 					}
@@ -128,10 +131,11 @@ var queryType = graphql.NewObject(
 			},
 			"problemList": &graphql.Field{
 				Type:        graphql.NewList(types.LogProblemContributionReportType),
-				Description: "find proble list",
+				Description: "proble list",
 				Args: graphql.FieldConfigArgument{
 					"first": &graphql.ArgumentConfig{
-						Type: graphql.Int,
+						Type:        graphql.Int,
+						Description: "number of item displayed",
 					},
 				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -148,10 +152,11 @@ var queryType = graphql.NewObject(
 
 			"questionList": &graphql.Field{
 				Type:        graphql.NewList(types.LogQuestionType),
-				Description: "find question list",
+				Description: "question list",
 				Args: graphql.FieldConfigArgument{
 					"first": &graphql.ArgumentConfig{
-						Type: graphql.Int,
+						Type:        graphql.Int,
+						Description: "number of item displayed",
 					},
 				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -174,47 +179,14 @@ var schema, _ = graphql.NewSchema(
 	},
 )
 
-func executeQuery(query string, schema graphql.Schema) *graphql.Result {
-	result := graphql.Do(graphql.Params{
-		Schema:        schema,
-		RequestString: query,
-	})
-	if len(result.Errors) > 0 {
-		fmt.Printf("wrong result, unexpected errors: %v", result.Errors)
-	}
-	return result
-}
-
 func main() {
 	connectDB()
 
-	http.HandleFunc("/graphql", func(w http.ResponseWriter, r *http.Request) {
-		result := executeQuery(r.URL.Query().Get("query"), schema)
-		json.NewEncoder(w).Encode(result)
+	h := handler.New(&handler.Config{
+		Schema: &schema,
+		Pretty: true,
 	})
 
-	fmt.Println("Now server is running on port 8080")
-	fmt.Println("Test with Get      : curl -g 'http://localhost:8080/graphql?query={user(id:1){name}}'")
-	fmt.Println("Test with Get      : curl -g 'http://localhost:8080/graphql?query={userList(first:100){id,name}}'")
-	fmt.Println("Test with Get      : curl -g 'http://localhost:8080/graphql?query={contribution(id:1){id,title}}'")
-	fmt.Println("Test with Get      : curl -g 'http://localhost:8080/graphql?query={contributionList(first:100){id,title}}'")
-	fmt.Println("Test with Get      : curl -g 'http://localhost:8080/graphql?query={problemList(first:100){id}}'")
-
+	http.Handle("/graphql", h)
 	http.ListenAndServe(":8080", nil)
-}
-
-//Helper function to import json from file to map
-func importJSONDataFromFile(fileName string, result interface{}) (isOK bool) {
-	isOK = true
-	content, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		fmt.Print("Error:", err)
-		isOK = false
-	}
-	err = json.Unmarshal(content, result)
-	if err != nil {
-		isOK = false
-		fmt.Print("Error:", err)
-	}
-	return
 }

@@ -14,14 +14,26 @@
   version = "v0.7.3"
 
 [[projects]]
+  name = "github.com/graphql-go/handler"
+  packages = ["."]
+  revision = "f0393b2c10daeebea900292b8e092e73475399d9"
+  version = "v0.2.1"
+
+[[projects]]
   branch = "master"
   name = "github.com/jmoiron/sqlx"
   packages = [".","reflectx"]
   revision = "3379e5993990b1f927fc8db926485e6f6becf2d2"
 
+[[projects]]
+  branch = "v2"
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6d473fc8199e65ae5243e7a3f82526179a59fa040ce538f73cd2c83e4f18daeb"
+  inputs-digest = "e0a0e75a1f85b62655fa583d9b8ebf4f0c3ab2299d5595d68fc8b6a420e56658"
   solver-name = "gps-cdcl"
   solver-version = 1
