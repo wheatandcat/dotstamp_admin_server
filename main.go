@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -21,11 +22,20 @@ var DB *sqlx.DB
 type DbInfo struct {
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
+	Host     string `yaml:"host"`
 	Dbname   string `yaml:"dbname"`
 }
 
 func connectDB() {
-	buf, err := ioutil.ReadFile("./config/devlop.yaml")
+	var buf []byte
+	var err error
+
+	if os.Getenv("ENV_CONF") == "prod" {
+		buf, err = ioutil.ReadFile("./config/prod.yaml")
+	} else {
+		buf, err = ioutil.ReadFile("./config/devlop.yaml")
+	}
+
 	if err != nil {
 		panic(err)
 	}
@@ -36,8 +46,8 @@ func connectDB() {
 		panic(err)
 	}
 
-	db, err := sqlx.Connect("mysql", d.User+d.Password+":@/"+d.Dbname)
-	log.Println(d.User + d.Password + ":@/" + d.Dbname)
+	db, err := sqlx.Connect("mysql", d.User+":"+d.Password+"@"+d.Host+"/"+d.Dbname)
+	log.Println(d.User + ":" + d.Password + "@" + d.Host + "/" + d.Dbname)
 	if err != nil {
 		panic(err)
 	}
@@ -61,7 +71,7 @@ var queryType = graphql.NewObject(
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					id, _ := p.Args["id"].(int)
 					u := types.UserMaster{}
-					err := DB.Get(&u, "SELECT id,name,email,password,profile_image_id FROM user_masters WHERE id=?", id)
+					err := DB.Get(&u, "SELECT * FROM user_masters WHERE id=?", id)
 					if err != nil {
 						return nil, nil
 					}
@@ -81,7 +91,7 @@ var queryType = graphql.NewObject(
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					first, _ := p.Args["first"].(int)
 					u := []types.UserMaster{}
-					err := DB.Select(&u, "SELECT id,name,email,password,profile_image_id FROM user_masters ORDER BY id ASC LIMIT ?", first)
+					err := DB.Select(&u, "SELECT * FROM user_masters ORDER BY id ASC LIMIT ?", first)
 					if err != nil {
 						return nil, nil
 					}
@@ -101,7 +111,7 @@ var queryType = graphql.NewObject(
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					idQuery, _ := p.Args["id"].(int)
 					u := types.UserContribution{}
-					err := DB.Get(&u, "SELECT id,title,view_status FROM user_contributions WHERE id=?", idQuery)
+					err := DB.Get(&u, "SELECT * FROM user_contributions WHERE id=?", idQuery)
 					if err != nil {
 						return nil, nil
 					}
@@ -121,7 +131,7 @@ var queryType = graphql.NewObject(
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					first, _ := p.Args["first"].(int)
 					u := []types.UserContribution{}
-					err := DB.Select(&u, "SELECT id,user_id,title,view_status,created_at,updated_at,deleted_at FROM user_contributions ORDER BY id ASC LIMIT ?", first)
+					err := DB.Select(&u, "SELECT * FROM user_contributions ORDER BY id ASC LIMIT ?", first)
 					if err != nil {
 						return nil, nil
 					}
@@ -141,7 +151,7 @@ var queryType = graphql.NewObject(
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					first, _ := p.Args["first"].(int)
 					r := []types.LogProblemContributionReport{}
-					err := DB.Select(&r, "SELECT id,user_contribution_id,user_id,type FROM log_problem_contribution_reports ORDER BY id ASC LIMIT ?", first)
+					err := DB.Select(&r, "SELECT l.id, l.user_contribution_id, c.title, l.type, l.created_at, l.updated_at, l.deleted_at FROM log_problem_contribution_reports as l INNER JOIN user_contributions  as c ON  l.user_contribution_id = c.id ORDER BY l.id DESC LIMIT ?", first)
 					if err != nil {
 						return nil, nil
 					}
@@ -149,7 +159,6 @@ var queryType = graphql.NewObject(
 					return r, nil
 				},
 			},
-
 			"questionList": &graphql.Field{
 				Type:        graphql.NewList(types.LogQuestionType),
 				Description: "question list",
@@ -162,7 +171,7 @@ var queryType = graphql.NewObject(
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					first, _ := p.Args["first"].(int)
 					r := []types.LogQuestion{}
-					err := DB.Select(&r, "SELECT id,user_id,email,body FROM log_questions ORDER BY id ASC LIMIT ?", first)
+					err := DB.Select(&r, "SELECT * FROM log_questions ORDER BY id ASC LIMIT ?", first)
 					if err != nil {
 						return nil, nil
 					}

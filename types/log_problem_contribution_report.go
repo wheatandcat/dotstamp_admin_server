@@ -9,6 +9,7 @@ type LogProblemContributionReport struct {
 	ID                 uint    `db:"id" json:"id"`
 	UserID             int     `db:"user_id" json:"userId"`
 	Type               int     `db:"type" json:"type"`
+	Title              string  `db:"title" json:"title"`
 	UserContributionID int     `db:"user_contribution_id" json:"userContributionId"`
 	CreatedAt          string  `db:"created_at" json:"createdAt"`
 	UpdatedAt          string  `db:"updated_at" json:"updatedAt"`
@@ -28,9 +29,13 @@ var LogProblemContributionReportType = graphql.NewObject(
 				Type:        graphql.Int,
 				Description: "user id",
 			},
+			"title": &graphql.Field{
+				Type:        graphql.String,
+				Description: "title",
+			},
 			"type": &graphql.Field{
 				Type:        graphql.Int,
-				Description: "title",
+				Description: "type",
 			},
 			"userContributionId": &graphql.Field{
 				Type:        graphql.Int,

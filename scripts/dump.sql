@@ -19,7 +19,7 @@
 --
 LOCK TABLES `user_masters` WRITE;
 INSERT INTO `user_masters` VALUES (1,'foo','foo@com','foo',1,'2017-07-23 15:12:52','2017-07-23 15:12:52',NULL);
-INSERT INTO `user_masters` VALUES (2,'bar','bar@com','bar',2,'2017-07-23 15:12:52','2017-07-23 15:12:52',NULL);
+INSERT INTO `user_masters` VALUES (2,'bar','bar@com','bar',0,'2017-07-23 15:12:52','2017-07-23 15:12:52',NULL);
 UNLOCK TABLES;
 
 
