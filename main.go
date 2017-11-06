@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -182,9 +183,56 @@ var queryType = graphql.NewObject(
 		},
 	})
 
+var rootMutation = graphql.NewObject(graphql.ObjectConfig{
+	Name: "RootMutation",
+	Fields: graphql.Fields{
+		"hideContribution": &graphql.Field{
+			Type:        types.HideType,
+			Description: "Update existing todo, mark it done or not done",
+			Args: graphql.FieldConfigArgument{
+				"id": &graphql.ArgumentConfig{
+					Type:        graphql.Int,
+					Description: "contribution id",
+				},
+			},
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				id, _ := p.Args["id"].(int)
+
+				now := time.Now().Format("2006/01/02/15:04:05")
+
+				DB.MustExec("UPDATE user_contributions SET deleted_at = '"+now+"' WHERE id = ?", id)
+				u := types.Hide{}
+				u.ID = uint(id)
+
+				return u, nil
+			},
+		},
+		"showContribution": &graphql.Field{
+			Type:        types.HideType,
+			Description: "Update existing todo, mark it done or not done",
+			Args: graphql.FieldConfigArgument{
+				"id": &graphql.ArgumentConfig{
+					Type:        graphql.Int,
+					Description: "contribution id",
+				},
+			},
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				id, _ := p.Args["id"].(int)
+				u := types.Hide{}
+
+				DB.MustExec("UPDATE user_contributions SET deleted_at = NULL WHERE id = ?", id)
+				u.ID = uint(id)
+
+				return u, nil
+			},
+		},
+	},
+})
+
 var schema, _ = graphql.NewSchema(
 	graphql.SchemaConfig{
-		Query: queryType,
+		Query:    queryType,
+		Mutation: rootMutation,
 	},
 )
 
